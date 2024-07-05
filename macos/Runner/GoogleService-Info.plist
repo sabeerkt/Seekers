@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyBK_n87N6Lp8IdCRh7paJFcBHwSWWPjjgA</string>
+	<key>GCM_SENDER_ID</key>
+	<string>938615986190</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.seeker.RunnerTests</string>
+	<key>PROJECT_ID</key>
+	<string>seeker-215cc</string>
+	<key>STORAGE_BUCKET</key>
+	<string>seeker-215cc.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:938615986190:ios:22eff15d71ff2d9a2ac45f</string>
+</dict>
+</plist>
