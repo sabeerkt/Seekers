@@ -35,7 +35,7 @@ class _BottomNavState extends State<BottomNav> {
         backgroundColor: Colors.black,
         selectedItemColor: Colors.red,
         unselectedItemColor:
-            Colors.black, // Set the unselected icon color to white
+            Colors.black, // Set the  icon color to white
         currentIndex: selectedindex,
         onTap: pageChanger,
         items: const [

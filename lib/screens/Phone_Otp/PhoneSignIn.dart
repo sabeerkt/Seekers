@@ -1,165 +1,108 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
-import 'package:seeker/widgets/button.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class PhoneSignIn extends StatefulWidget {
-  const PhoneSignIn({super.key});
+import 'package:provider/provider.dart';
+import 'package:seeker/controller/auth_provider.dart';
+import 'package:seeker/screens/Phone_Otp/widget/button.dart';
+import 'package:seeker/screens/Phone_Otp/widget/phonefield.dart';
+import 'package:seeker/screens/Phone_Otp/widget/textfield.dart';
+
+class PhoneAuthPage extends StatelessWidget {
+  PhoneAuthPage({super.key});
+
+  final TextEditingController namecontroller = TextEditingController();
+  final TextEditingController emailcontroller = TextEditingController();
+  final TextEditingController phonecontroller = TextEditingController();
 
   @override
-  State<PhoneSignIn> createState() => _PhoneSignInState();
-}
-
-class _PhoneSignInState extends State<PhoneSignIn> {
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
-
-  void _showOtpDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15.0),
-          ),
-          title: const Text(
-            'Enter OTP',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'We have sent an OTP to your phone. Please enter it below:',
-                style: TextStyle(
-                  color: Colors.grey[700],
-                ),
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final pro = Provider.of<AuthProvider>(context, listen: false);
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.green,
+      ),
+      //resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
+        reverse: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 30,
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6, // Assuming OTP is 6 digits
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hey',
+                    style: GoogleFonts.urbanist(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
-                  labelText: 'OTP Code',
-                  hintText: 'Enter the OTP',
-                  counterText: '', // Hide the character counter
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                print('OTP entered: ${_otpController.text}');
-                // Add your OTP verification logic here
-              },
-              child: const Text('Cancel'),
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.grey,
+                  Text(
+                    'Enter your phone',
+                    style: GoogleFonts.urbanist(
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text("to send otp!",
+                      style: GoogleFonts.urbanist(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      )),
+                ],
               ),
             ),
-            ElevatedButton(
+            SizedBox(
+              height: size.height * 0.02,
+            ),
+            Padding(
+                padding: const EdgeInsets.all(30),
+                child: CustomPhoneField(phonecontroller: phonecontroller)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 30),
+              child: CustomTextField(
+                  icons: Icons.person,
+                  hintText: "enter your name",
+                  controller: namecontroller),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(30, 0, 30, 30),
+              child: CustomTextField(
+                  icons: Icons.mail,
+                  hintText: "enter your email",
+                  controller: emailcontroller),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            CustomButtonPhone(
               onPressed: () {
-                if (_otpController.text.length == 6) {
-                  Navigator.of(context).pop();
-                  print('OTP entered: ${_otpController.text}');
-                  // Add your OTP verification logic here
+                String countrycode = "+91";
+                String phonenumber = countrycode + phonecontroller.text;
+                if (phonenumber.length == 13) {
+                  pro.signInWithPhone(phonenumber, namecontroller.text,
+                      emailcontroller.text, context);
                 } else {
-                  // Show an error message
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Please enter a valid 6-digit OTP.'),
+                      content: Text('Please enter a 10-digit phone number.'),
                     ),
                   );
                 }
               },
-              child: const Text('Submit'),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.red,
-              ),
+              size: size,
+              buttonname: "Send code",
             ),
           ],
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Lottie.asset(
-                'assets/PhoneOtp.json', // Make sure to include your Lottie file in the assets directory
-                width: 300,
-                height: 300,
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  labelText: 'Phone Number',
-                  hintText: 'Enter your phone number',
-                  prefixIcon: const Icon(Icons.phone),
-                  labelStyle: const TextStyle(
-                    fontSize: 16.0,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  hintStyle: const TextStyle(
-                    fontSize: 14.0,
-                    color: Colors.grey,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                      color: Colors.blue,
-                      width: 1.0,
-                    ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(
-                      color: Colors.blueAccent,
-                      width: 2.0,
-                    ),
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      vertical: 10.0, horizontal: 20.0),
-                ),
-                style: const TextStyle(
-                  fontSize: 16.0,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Button(
-                onTap: () {
-                  String phoneNumber = _phoneController.text;
-                  print('Phone number entered: $phoneNumber');
-                  _showOtpDialog();
-                },
-                name: 'Continue',
-              ),
-            ],
-          ),
         ),
       ),
     );
