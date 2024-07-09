@@ -18,7 +18,7 @@ class _Home_PageState extends State<Home_Page> {
   void navigateToNextPage() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const CreateProfile()),
+      MaterialPageRoute(builder: (context) =>  AddEditPage()),
     );
 
     if (result != null && result is Map<String, dynamic>) {

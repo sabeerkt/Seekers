@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:seeker/model/seeker_model.dart';
 import 'package:seeker/service/firebase_service.dart';
 
-class Seeker extends ChangeNotifier {
+class SeekerProvider extends ChangeNotifier {
   FirebaseService _firebaseService = FirebaseService();
   String uniquename = DateTime.now().microsecondsSinceEpoch.toString();
   String downloadurl = '';
