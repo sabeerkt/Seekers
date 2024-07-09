@@ -17,7 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -50,12 +51,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       decoration: InputDecoration(
                         labelText: 'Username',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.0), // Adjust border radius as needed
-                          borderSide: const BorderSide(color: Colors.grey), // Add a border color
+                          borderRadius: BorderRadius.circular(
+                              10.0), // Adjust border radius as needed
+                          borderSide: const BorderSide(
+                              color: Colors.grey), // Add a border color
                         ),
                         filled: true,
                         fillColor: Colors.white, // Set a background color
-                        prefixIcon: const Icon(Icons.person), // Optionally add an icon
+                        prefixIcon:
+                            const Icon(Icons.person), // Optionally add an icon
                       ),
                     ),
                   ],
@@ -66,18 +70,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0), // Adjust border radius as needed
-                      borderSide: const BorderSide(color: Colors.grey), // Add a border color
+                      borderRadius: BorderRadius.circular(
+                          10.0), // Adjust border radius as needed
+                      borderSide: const BorderSide(
+                          color: Colors.grey), // Add a border color
                     ),
                     filled: true,
                     fillColor: Colors.white, // Set a background color
-                    prefixIcon: const Icon(Icons.email), // Optionally add an icon
+                    prefixIcon:
+                        const Icon(Icons.email), // Optionally add an icon
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextField(
                   controller: _passwordController,
-                  obscureText: true, // This hides the entered text for passwords
+                  obscureText:
+                      true, // This hides the entered text for passwords
                   decoration: InputDecoration(
                     labelText: 'Password',
                     border: OutlineInputBorder(
@@ -86,7 +94,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    prefixIcon: const Icon(Icons.lock), // Changed icon to lock icon
+                    prefixIcon:
+                        const Icon(Icons.lock), // Changed icon to lock icon
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.visibility),
                       onPressed: () {
@@ -98,7 +107,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
                 TextField(
                   controller: _confirmPasswordController,
-                  obscureText: true, // This hides the entered text for passwords
+                  obscureText:
+                      true, // This hides the entered text for passwords
                   decoration: InputDecoration(
                     labelText: 'Confirm Password',
                     border: OutlineInputBorder(
@@ -107,7 +117,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    prefixIcon: const Icon(Icons.lock), // Changed icon to lock icon
+                    prefixIcon:
+                        const Icon(Icons.lock), // Changed icon to lock icon
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.visibility),
                       onPressed: () {
@@ -139,42 +150,88 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void signUpWithEmail(BuildContext context) async {
-    if (_passwordController.text == _confirmPasswordController.text) {
-      try {
-        await Provider.of<AuthProvider>(context, listen: false).signUpWithEmail(
-            _emailController.text, _passwordController.text, _usernameController.text);
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Success'),
-            content: const Text('Account created successfully! Redirecting to login page...'),
-          ),
-        );
-        await Future.delayed(const Duration(seconds: 3));
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginPage(),
-          ),
-        );
-      } catch (e) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Error'),
-            content: Text(e.toString()),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Passwords Not Same')));
+    if (_passwordController.text != _confirmPasswordController.text) {
+      _showSnackBar(context, 'Passwords do not match');
+      return;
     }
+
+    try {
+      await Provider.of<AuthProvider>(context, listen: false).signUpWithEmail(
+        _emailController.text,
+        _passwordController.text,
+        _usernameController.text,
+      );
+
+      _showSuccessDialog(context);
+
+      await Future.delayed(const Duration(seconds: 3));
+      _navigateToLoginPage(context);
+    } catch (e) {
+      _showErrorDialog(context, e.toString());
+    }
+  }
+
+  void _showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 10),
+            Text('Success', style: TextStyle(color: Colors.green)),
+          ],
+        ),
+        content:
+            Text('Account created successfully! Redirecting to login page...'),
+        backgroundColor: Colors.white,
+        elevation: 8,
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red),
+            SizedBox(width: 10),
+            Text('Error', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+        content: Text(errorMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('OK', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+        backgroundColor: Colors.white,
+        elevation: 8,
+      ),
+    );
+  }
+
+  void _navigateToLoginPage(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
 }

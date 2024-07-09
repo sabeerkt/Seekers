@@ -20,7 +20,7 @@ class OtpScreen extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.red,
       ),
       // backgroundColor: bgColor,
       resizeToAvoidBottomInset: true,

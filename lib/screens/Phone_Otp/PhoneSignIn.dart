@@ -21,7 +21,7 @@ class PhoneAuthPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.red,
       ),
       //resizeToAvoidBottomInset: true,
       body: SingleChildScrollView(

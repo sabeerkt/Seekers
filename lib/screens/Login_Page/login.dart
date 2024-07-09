@@ -133,14 +133,43 @@ class _LoginPageState extends State<LoginPage> {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: const Text('Error'),
-                          content: Text(e.toString()),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          title: Row(
+                            children: [
+                              Icon(Icons.error_outline, color: Colors.red),
+                              SizedBox(width: 10),
+                              Text(
+                                'Error',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+                          content: Text(
+                            e.toString(),
+                            style: TextStyle(fontSize: 16),
+                          ),
                           actions: [
-                            TextButton(
+                            ElevatedButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('OK'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                'OK',
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
                           ],
+                          backgroundColor: Colors.grey[200],
+                          elevation: 8,
                         ),
                       );
                     }
@@ -182,7 +211,7 @@ class _LoginPageState extends State<LoginPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>  PhoneAuthPage(),
+                            builder: (context) => PhoneAuthPage(),
                           ),
                         );
                       },
