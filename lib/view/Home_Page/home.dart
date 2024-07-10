@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:seeker/view/detailpage/detail.dart';
+import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:seeker/controller/seeker_provider.dart';
+import 'package:seeker/model/seeker_model.dart';
 import 'package:seeker/view/Home_Page/widget/serch.dart';
-import 'package:seeker/view/Home_Page/widget/button.dart';
+import 'package:seeker/view/detailpage/detail.dart';
+
 import 'package:seeker/view/Home_Page/widget/createProfile.dart';
 
 class Home_Page extends StatefulWidget {
@@ -12,31 +16,30 @@ class Home_Page extends StatefulWidget {
 }
 
 class _Home_PageState extends State<Home_Page> {
-  List<String> usernames = []; // List to store usernames
-  List<String> subtitles = []; // List to store subtitles
-
   void navigateToNextPage() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) =>  AddEditPage()),
+      MaterialPageRoute(builder: (context) => AddEditPage()),
     );
 
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
-        usernames.add(result[
-            'fullName']); // Assuming you pass 'fullName' from CreateProfile
-        subtitles.add(result[
-            'description']); // Assuming you pass 'description' from CreateProfile
+        // Handle any updates if necessary
       });
     }
   }
 
-  void navigateToDetailPage(String username, String subtitle) {
+  void navigateToDetailPage(SeekerModel seeker) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            DetailPage(username: username, subtitle: subtitle),
+        builder: (context) => DetailPage(
+          username: seeker.name ?? '', // Pass username here
+          subtitle: seeker.secondname ?? '', // Pass subtitle here
+          phoneNumber: seeker.number ?? '', // Replace with actual phone number from seeker model
+          pdfUrl: seeker.pdf ?? '', 
+          image: seeker.image ?? '',
+        ),
       ),
     );
   }
@@ -73,36 +76,45 @@ class _Home_PageState extends State<Home_Page> {
             padding: EdgeInsets.all(8.0),
             child: NeumorphicSearchField(),
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: usernames.length,
-              itemBuilder: (context, index) {
-                Color tileColor = index % 2 == 0
-                    ? Colors.white
-                    : const Color.fromARGB(255, 215, 205, 205);
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: tileColor,
-                      child: Text(
-                        usernames[index][0].toUpperCase(),
-                        style: const TextStyle(
-                          color: Color.fromARGB(255, 236, 65, 65),
-                        ),
-                      ),
-                    ),
-                    title: Text(
-                      usernames[index],
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(subtitles[index]),
-                    tileColor: tileColor,
-                    onTap: () => navigateToDetailPage(
-                        usernames[index], subtitles[index]),
-                  ),
-                );
-              },
+          Consumer<SeekerProvider>(
+            builder: (context, value, child) => Expanded(
+              child: StreamBuilder<QuerySnapshot<SeekerModel>>(
+                stream: value.getData(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (snapshot.hasError) {
+                    return const Center(child: Text('Snapshot has error'));
+                  } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text('No seekers found'));
+                  } else {
+                    List<SeekerModel> seekers = snapshot.data!.docs
+                        .map((doc) => doc.data())
+                        .toList();
+                    return ListView.builder(
+                      itemCount: seekers.length,
+                      itemBuilder: (context, index) {
+                        SeekerModel seeker = seekers[index];
+                        return ListTile(
+                          leading: seeker.image != null
+                              ? CircleAvatar(
+                                  backgroundImage:
+                                      NetworkImage(seeker.image!),
+                                )
+                              : const CircleAvatar(
+                                  child: Icon(Icons.person),
+                                ),
+                          title: Text(seeker.name ?? ''),
+                          subtitle: Text(seeker.secondname ?? ''),
+                          onTap: () => navigateToDetailPage(seeker),
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
             ),
           ),
         ],

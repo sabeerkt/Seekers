@@ -1,14 +1,14 @@
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; // for kIsWeb
+import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:seeker/controller/base_provider.dart';
 import 'package:seeker/controller/seeker_provider.dart';
 import 'package:seeker/model/seeker_model.dart';
-import 'package:seeker/widgets/bottombar.dart';
+import 'package:file_picker/file_picker.dart' as file_picker;
 
 class AddEditPage extends StatefulWidget {
   final SeekerModel? student;
@@ -30,6 +30,7 @@ class _AddEditPageState extends State<AddEditPage> {
   String? selectedDistrict;
   String? selectedGender;
   File? selectedImage;
+  File? selectedPDF;
 
   @override
   void initState() {
@@ -126,17 +127,12 @@ class _AddEditPageState extends State<AddEditPage> {
                               );
                   },
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        pro.setImage(ImageSource.gallery);
-                      },
-                      icon: const Icon(Icons.photo),
-                      label: const Text('Choose from Gallery'),
-                    ),
-                  ],
+                ElevatedButton.icon(
+                  onPressed: () {
+                    pro.setImage(ImageSource.gallery);
+                  },
+                  icon: const Icon(Icons.photo),
+                  label: const Text('Choose from Gallery'),
                 ),
               ],
             ),
@@ -151,6 +147,14 @@ class _AddEditPageState extends State<AddEditPage> {
                     controller: nameController,
                     decoration: InputDecoration(
                       labelText: 'Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  SizedBox(height: 16.0),
+                  TextFormField(
+                    controller: secondnameController,
+                    decoration: InputDecoration(
+                      labelText: 'Second Name',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -172,41 +176,95 @@ class _AddEditPageState extends State<AddEditPage> {
                       border: OutlineInputBorder(),
                     ),
                   ),
+                  SizedBox(height: 16.0),
                   TextFormField(
                     controller: descriptionController,
-                    keyboardType: TextInputType.phone,
-                    maxLength: 10,
                     decoration: InputDecoration(
-                      labelText: 'desc',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                   TextFormField(
-                    controller: secondnameController,
-                    keyboardType: TextInputType.phone,
-                    maxLength: 10,
-                    decoration: InputDecoration(
-                      labelText: 'secnd',
+                      labelText: 'Description',
                       border: OutlineInputBorder(),
                     ),
                   ),
                   SizedBox(height: 16.0),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_validateFields()) {
-                        if (isEdit) {
-                          editStudent(context);
-                        } else {
-                          addStudent(context);
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      if (kIsWeb) {
+                        // For web platform, use input element to select PDF
+                        final result =
+                            await file_picker.FilePicker.platform.pickFiles(
+                          type: file_picker.FileType.custom,
+                          allowedExtensions: ['pdf'],
+                        );
+
+                        if (result != null && result.files.isNotEmpty) {
+                          setState(() {
+                            selectedPDF = File(result.files.single.path!);
+                          });
                         }
                       } else {
-                        _showAlert(context, 'Please fill in all fields.');
+                        // For mobile platform, use image_picker package
+                        FilePickerResult? result =
+                            await FilePicker.platform.pickFiles(
+                          type: FileType.custom,
+                          allowedExtensions: ['pdf'],
+                        );
+                        if (result != null && result.files.single.path != null) {
+                          setState(() {
+                            selectedPDF = File(result.files.single.path!);
+                          });
+                        }
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                    icon: const Icon(Icons.picture_as_pdf),
+                    label: const Text('Select PDF'),
+                  ),
+                  if (selectedPDF != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: Text('Selected PDF: ${selectedPDF!.path.split('/').last}'),
                     ),
-                    child: Text(isEdit ? 'Save' : 'Add'),
+                  SizedBox(height: 16.0),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final name = nameController.text.trim();
+                      final secondname = secondnameController.text.trim();
+                      final email = emailController.text.trim();
+                      final number = numberController.text.trim();
+                      final description = descriptionController.text.trim();
+
+                      SeekerModel seeker = SeekerModel(
+                        name: name,
+                        secondname: secondname,
+                        email: email,
+                        number: number,
+                        description: description,
+                        image: pro.selectedImageWeb ?? pro.selectedImage?.path ?? selectedImage?.path,
+                        pdf: selectedPDF?.path,
+                      );
+
+                      final seekerProvider =
+                          Provider.of<SeekerProvider>(context, listen: false);
+                      if (isEdit && widget.id != null) {
+                        seekerProvider.updateSeeker(widget.id, seeker);
+                        if (pro.selectedImage != null) {
+                          await seekerProvider.updateImage(
+                              seeker.image!, pro.selectedImage);
+                        }
+                        if (selectedPDF != null) {
+                          await seekerProvider.pdfAdder(selectedPDF!);
+                        }
+                      } else {
+                        await seekerProvider.addSeeker(seeker);
+                        if (selectedPDF != null) {
+                          await seekerProvider.pdfAdder(selectedPDF!);
+                        }
+                        if (pro.selectedImage != null) {
+                          await seekerProvider.imageAdder(pro.selectedImage!);
+                        }
+                      }
+
+                      Navigator.pop(context);
+                    },
+                    child: Text(isEdit ? 'Update Seeker' : 'Add Seeker'),
                   ),
                 ],
               ),
@@ -215,127 +273,5 @@ class _AddEditPageState extends State<AddEditPage> {
         ],
       ),
     );
-  }
-
-  bool _validateFields() {
-    return nameController.text.isNotEmpty &&
-        emailController.text.isNotEmpty &&
-        numberController.text.isNotEmpty;
-  }
-
-  void _showAlert(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Alert'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void addStudent(BuildContext context) async {
-    final provider = Provider.of<SeekerProvider>(context, listen: false);
-    final pro = Provider.of<BaseProvider>(context, listen: false);
-    final name = nameController.text;
-    final secondname = secondnameController.text;
-    final email = emailController.text;
-    final number = numberController.text;
-    final description = descriptionController.text;
-
-    String imageUrl;
-    if (kIsWeb && pro.selectedImageWeb != null) {
-      imageUrl = pro.selectedImageWeb!;
-    } else if (pro.selectedImage != null) {
-      await provider.imageAdder(pro.selectedImage!);
-      imageUrl = provider.downloadurl;
-    } else {
-      imageUrl =
-          'https://example.com/default_image.png'; // Replace with your default image URL
-    }
-
-    final seeker = SeekerModel(
-      name: name,
-      secondname: secondname,
-      email: email,
-      image: imageUrl,
-      number: number,
-      description: description,
-    );
-
-    provider.addSeeker(seeker);
-
-    // Clear fields after adding student
-    _clearFields();
-
-    // Navigate to next screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const BottomNav(),
-      ),
-    );
-  }
-
-  void editStudent(BuildContext context) async {
-    final provider = Provider.of<SeekerProvider>(context, listen: false);
-    final pro = Provider.of<BaseProvider>(context, listen: false);
-
-    try {
-      final editedName = nameController.text;
-      final editsecondname = secondnameController.text;
-      final editemail = emailController.text;
-      final editnumber = numberController.text;
-      final editdescription = descriptionController.text;
-
-      String imageUrl;
-      if (kIsWeb && pro.selectedImageWeb != null) {
-        imageUrl = pro.selectedImageWeb!;
-      } else if (pro.selectedImage != null) {
-        await provider.imageAdder(pro.selectedImage!);
-        imageUrl = provider.downloadurl;
-      } else {
-        imageUrl = widget
-            .student!.image!; // Use existing image if no new image selected
-      }
-
-      final updatedSeeker = SeekerModel(
-       name: editedName,
-      secondname: editsecondname,
-      email: editemail,
-       image: imageUrl,
-      
-      number: editnumber,
-      description: editdescription,
-      );
-
-      provider.updateSeeker(widget.id!, updatedSeeker);
-
-      Navigator.pop(context);
-    } catch (e) {
-      print("Error updating student: $e");
-    }
-  }
-
-  void _clearFields() {
-    nameController.clear();
-    descriptionController.clear();
-    emailController.clear();
-    numberController.clear();
-    secondnameController.clear();
-    setState(() {
-      selectedImage = null;
-      selectedDistrict = null;
-      selectedGender = null;
-    });
   }
 }

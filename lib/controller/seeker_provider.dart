@@ -10,6 +10,7 @@ class SeekerProvider extends ChangeNotifier {
   FirebaseService _firebaseService = FirebaseService();
   String uniquename = DateTime.now().microsecondsSinceEpoch.toString();
   String downloadurl = '';
+  String pdfDownloadUrl = ''; // Add this line
 
   Stream<QuerySnapshot<SeekerModel>> getData() {
     return _firebaseService.seekerref.snapshots();
@@ -19,7 +20,6 @@ class SeekerProvider extends ChangeNotifier {
     await _firebaseService.seekerref.add(seeker);
     notifyListeners();
   }
-
 
   deleteSeeker(id) async {
     await _firebaseService.seekerref.doc(id).delete();
@@ -44,7 +44,20 @@ class SeekerProvider extends ChangeNotifier {
     }
   }
 
-   updateImage(imageurl, File? newimage) async {
+  pdfAdder(pdfFile) async {
+    Reference folder = _firebaseService.storage.ref().child('pdfs');
+    Reference pdfs = folder.child("$uniquename.pdf");
+    try {
+      await pdfs.putFile(pdfFile);
+      pdfDownloadUrl = await pdfs.getDownloadURL();
+      notifyListeners();
+      print(pdfDownloadUrl);
+    } catch (e) {
+      throw Exception(e);
+    }
+  }
+
+  updateImage(imageurl, File? newimage) async {
     try {
       if (newimage != null && newimage.existsSync()) {
         Reference storedimage = FirebaseStorage.instance.refFromURL(imageurl);
@@ -65,10 +78,4 @@ class SeekerProvider extends ChangeNotifier {
     Reference storedimage = FirebaseStorage.instance.refFromURL(imageurl);
     await storedimage.delete();
   }
-
-
-
-
-
-  
 }

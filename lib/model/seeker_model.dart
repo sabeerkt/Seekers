@@ -7,9 +7,10 @@ class SeekerModel {
   String? image;
    String? number;
   String? description;
+  String? pdf;
 
   SeekerModel({this.name, this.secondname, this.email, 
-  required this.image,this.number, required this.description
+  required this.image,this.number, required this.description, required this.pdf,
   
   });
 
@@ -21,11 +22,13 @@ class SeekerModel {
       email: json['email'] as String?,
        number: json['number'] as String?,
       description: json['description'] as String?,
+      pdf: json['pdf'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'pdf': pdf,
       'image': image,
       'name': name,
       'secondname': secondname,

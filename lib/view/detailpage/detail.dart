@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart'; // Add this package for call and WhatsApp functionalities
+import 'package:url_launcher/url_launcher.dart'; // For call and WhatsApp functionalities
+import 'package:flutter_pdfview/flutter_pdfview.dart'; // For PDF viewing
+import 'package:permission_handler/permission_handler.dart'; // For permissions
+import 'package:dio/dio.dart'; // For downloading files
+import 'package:path_provider/path_provider.dart'; // For accessing device storage
 
 class DetailPage extends StatelessWidget {
   final String username;
   final String subtitle;
+  final String phoneNumber;
+  final String pdfUrl;
+  final String image;
 
-  const DetailPage({Key? key, required this.username, required this.subtitle})
-      : super(key: key);
+  const DetailPage({
+    Key? key,
+    required this.username,
+    required this.subtitle,
+    required this.phoneNumber,
+    required this.pdfUrl,
+      required this.image,
+  }) : super(key: key);
 
   void _showNumberOptionsDialog(BuildContext context) {
     showDialog(
@@ -22,8 +35,7 @@ class DetailPage extends StatelessWidget {
                 title: Text('Call'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  _makePhoneCall(
-                      'tel:1234567890'); // Replace with actual number
+                  _makePhoneCall('tel:$phoneNumber');
                 },
               ),
               SizedBox(height: 8), // Adding some space between options
@@ -32,7 +44,7 @@ class DetailPage extends StatelessWidget {
                 title: Text('WhatsApp'),
                 onTap: () {
                   Navigator.of(context).pop();
-                  _openWhatsApp('1234567890'); // Replace with actual number
+                  _openWhatsApp(phoneNumber);
                 },
               ),
             ],
@@ -59,6 +71,71 @@ class DetailPage extends StatelessWidget {
     }
   }
 
+  void _openPdfPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.8,
+            width: MediaQuery.of(context).size.width * 0.9,
+            child: Column(
+              children: <Widget>[
+                Expanded(
+                  child: PDFView(
+                    filePath: pdfUrl,
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Close PDF'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        _downloadFile(context, pdfUrl, 'document.pdf');
+                      },
+                      child: Text('Download PDF'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _downloadFile(BuildContext context, String url, String fileName) async {
+    // Check if permission is granted
+    var status = await Permission.storage.request();
+    if (status.isGranted) {
+      var dir = await getExternalStorageDirectory();
+      String savePath = "${dir!.path}/$fileName";
+      Dio dio = Dio();
+
+      try {
+        await dio.download(url, savePath);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Downloaded to $savePath')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Download failed: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Permission denied')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +153,9 @@ class DetailPage extends StatelessWidget {
                 child: CircleAvatar(
                   radius: 50,
                   backgroundImage: AssetImage(
-                      'assets/s22 shop.jpeg'), // Replace with the path to your image asset
+                      image
+                      
+                      ), // Replace with the path to your image asset
                 ),
               ),
               const SizedBox(height: 20),
@@ -118,13 +197,23 @@ class DetailPage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.grey[300]!),
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.insert_drive_file,
-                    size: 50,
-                    color: Colors.grey,
-                  ),
-                ),
+                child: pdfUrl.isNotEmpty
+                    ? Center(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            _openPdfPopup(context); // Open PDF in a popup
+                          },
+                          icon: Icon(Icons.insert_drive_file),
+                          label: Text('Open PDF'),
+                        ),
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.insert_drive_file,
+                          size: 50,
+                          color: Colors.grey,
+                        ),
+                      ),
               ),
               const SizedBox(height: 20),
               const Text(
@@ -153,11 +242,11 @@ class DetailPage extends StatelessWidget {
                     ],
                   ),
                   child: Row(
-                    children: const [
+                    children: [
                       Icon(Icons.phone, color: Colors.blueAccent),
                       SizedBox(width: 10),
                       Text(
-                        '1234567890', // Replace with the actual number
+                        phoneNumber,
                         style: TextStyle(fontSize: 18, color: Colors.black87),
                       ),
                     ],

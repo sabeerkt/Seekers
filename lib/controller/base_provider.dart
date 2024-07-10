@@ -1,15 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:flutter/material.dart';
 
 class BaseProvider extends ChangeNotifier {
   File? _selectedImage;
   ImagePicker imagePicker = ImagePicker();
-  String?
-      selectedImageWeb; // To store the base64 or URL of the selected image for web
+  String? selectedImageWeb; // To store the base64 or URL of the selected image for web
 
   File? get selectedImage => _selectedImage;
 
