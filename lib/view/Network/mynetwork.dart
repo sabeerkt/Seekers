@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:seeker/view/Network/widget/list.dart';
 import 'package:seeker/view/Network/widget/tabbar.dart'; // Make sure to import your CustomTabbar widget
 
 class My_Network extends StatefulWidget {
@@ -40,8 +41,8 @@ class _My_NetworkState extends State<My_Network> {
                 child: TabBarView(
                   children: [
                     // Add your content for each tab view here
-                    Center(child: Text('Business')),
-                    Center(child: Text('Profession')),
+                    List_Seeker(),
+                    List_Seeker(),
                   ],
                 ),
               ),

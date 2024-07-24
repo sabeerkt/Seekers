@@ -26,42 +26,6 @@ class DetailPage extends StatelessWidget {
     required this.description,
   }) : super(key: key);
 
-  void _showNumberOptionsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Choose an Option',
-              style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              ListTile(
-                leading: Icon(Icons.call, color: Colors.blueAccent),
-                title: Text('Call'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _makePhoneCall('tel:$phoneNumber');
-                },
-              ),
-              Divider(),
-              ListTile(
-                leading: Icon(Icons.message, color: Colors.green),
-                title: Text('WhatsApp'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _openWhatsApp(phoneNumber);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   void _makePhoneCall(String url) async {
     if (await canLaunch(url)) {
       await launch(url);
@@ -168,7 +132,6 @@ class DetailPage extends StatelessWidget {
           onReceiveProgress: (received, total) {
             if (total != -1) {
               print((received / total * 100).toStringAsFixed(0) + "%");
-              // You can update the UI with download progress here
             }
           },
         );
@@ -211,7 +174,8 @@ class DetailPage extends StatelessWidget {
               child: Center(
                 child: CircleAvatar(
                   radius: 70,
-                  backgroundImage: AssetImage(image),
+                  backgroundImage: _getImageProvider(),
+                  child: _getImageErrorWidget(),
                 ),
               ),
             ),
@@ -227,6 +191,12 @@ class DetailPage extends StatelessWidget {
                           TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                     ),
                   ),
+                  Text(
+                    'Contact Options:',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
+                  _buildContactOption(context),
                   SizedBox(height: 20),
                   _buildInfoSection('Subtitle', subtitle),
                   _buildInfoSection('Description', description),
@@ -239,12 +209,6 @@ class DetailPage extends StatelessWidget {
                   SizedBox(height: 10),
                   _buildPdfSection(context),
                   SizedBox(height: 20),
-                  Text(
-                    'Contact Options:',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  _buildContactOption(context),
                 ],
               ),
             ),
@@ -252,6 +216,23 @@ class DetailPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  ImageProvider _getImageProvider() {
+    if (image.startsWith('http') || image.startsWith('https')) {
+      return NetworkImage(image);
+    } else if (image.isNotEmpty) {
+      return FileImage(File(image));
+    } else {
+      return AssetImage('assets/default_profile.png');
+    }
+  }
+
+  Widget? _getImageErrorWidget() {
+    if (image.isEmpty) {
+      return Icon(Icons.person, size: 70, color: Colors.black);
+    }
+    return null;
   }
 
   Widget _buildInfoSection(String title, String content) {
@@ -326,34 +307,36 @@ class DetailPage extends StatelessWidget {
   }
 
   Widget _buildContactOption(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showNumberOptionsDialog(context),
-      child: Container(
-        padding: EdgeInsets.all(16.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey[300]!),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 2,
-              blurRadius: 5,
-              offset: Offset(0, 3),
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () => _makePhoneCall('tel:$phoneNumber'),
+            icon: Icon(Icons.call, color: Colors.white),
+            label: Text('Call', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
             ),
-          ],
+          ),
         ),
-        child: Row(
-          children: [
-            Icon(Icons.phone, color: Colors.blueAccent),
-            SizedBox(width: 10),
-            Text(
-              phoneNumber,
-              style: TextStyle(fontSize: 18, color: Colors.black87),
+        SizedBox(width: 10),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () => _openWhatsApp(phoneNumber),
+            icon: Icon(Icons.message, color: Colors.white),
+            label: Text('WhatsApp', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30)),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

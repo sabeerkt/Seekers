@@ -110,10 +110,10 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         );
                       },
-                      child: const Text(
-                        'Forgot your password?',
-                        style: TextStyle(color: Colors.red),
-                      ),
+                      // child: const Text(
+                      //   'Forgot your password?',
+                      //   style: TextStyle(color: Colors.red),
+                      // ),
                     ),
                   ],
                 ),

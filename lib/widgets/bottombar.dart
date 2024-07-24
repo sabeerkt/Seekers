@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:seeker/view/cart/cart.dart';
 import 'package:seeker/view/Home_Page/home.dart';
 import 'package:seeker/view/Network/mynetwork.dart';
 import 'package:seeker/view/setting_page/setting.dart';
@@ -23,19 +22,16 @@ class _BottomNavState extends State<BottomNav> {
   List<Widget> pages = [
     Home_Page(),
     My_Network(),
-    Cart_Page(),
     SettingPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.white,
         selectedItemColor: Colors.red,
-        unselectedItemColor:
-            Colors.black, // Set the  icon color to white
+        unselectedItemColor: Colors.black,
         currentIndex: selectedindex,
         onTap: pageChanger,
         items: const [
@@ -46,10 +42,6 @@ class _BottomNavState extends State<BottomNav> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Network',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
