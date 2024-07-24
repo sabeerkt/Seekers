@@ -99,9 +99,39 @@ class _Home_PageState extends State<Home_Page> {
       ),
       body: Column(
         children: [
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: NeumorphicSearchField(),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Consumer<SeekerProvider>(
+                builder: (context, notifier, child) => TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search ...',
+                    hintStyle: TextStyle(color: Colors.grey[600]),
+                    prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                    //suffixIcon: Icon(Icons.mic, color: Colors.grey[600]),
+                    border: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  ),
+                  style: TextStyle(fontSize: 16),
+                  onChanged: (query) {
+                    notifier.updateSearchQuery(query);
+                  },
+                ),
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),

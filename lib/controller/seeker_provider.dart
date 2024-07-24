@@ -9,16 +9,31 @@ class SeekerProvider extends ChangeNotifier {
   FirebaseService _firebaseService = FirebaseService();
   String uniquename = DateTime.now().microsecondsSinceEpoch.toString();
   String downloadurl = '';
+  String _searchQuery = '';
   String pdfDownloadUrl = '';
 
+  String get searchQuery => _searchQuery;
+
   Stream<QuerySnapshot<SeekerModel>> getData() {
-    return _firebaseService.seekerref.snapshots();
+    if (_searchQuery.isEmpty) {
+      return _firebaseService.seekerref.snapshots();
+    } else {
+      return _firebaseService.seekerref
+          .where('name', isGreaterThanOrEqualTo: _searchQuery)
+          .where('name', isLessThan: _searchQuery + 'z')
+          .snapshots();
+    }
   }
 
   Stream<QuerySnapshot<SeekerModel>> getFilteredData(String category) {
     return _firebaseService.seekerref
         .where('category', isEqualTo: category)
         .snapshots();
+  }
+
+  void updateSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
   }
 
   addSeeker(SeekerModel seeker) async {

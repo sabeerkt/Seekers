@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:seeker/controller/seeker_provider.dart';
 import 'package:seeker/model/seeker_model.dart';
 import 'package:seeker/view/Network/widget/list.dart';
-import 'package:seeker/view/Network/widget/tabbar.dart';
+import 'package:seeker/view/Network/widget/tabbar.dart'; // Ensure this file contains the CustomTabbar widget
 import 'package:seeker/view/detailpage/detail.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
@@ -212,8 +212,8 @@ class _My_NetworkState extends State<My_Network> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final itemdbprovider = Provider.of<SeekerProvider>(context);
-    //to get show the iteam that saved
     itemdbprovider.getData();
+
     return DefaultTabController(
       initialIndex: 0,
       length: 2,
@@ -230,21 +230,13 @@ class _My_NetworkState extends State<My_Network> with TickerProviderStateMixin {
           ),
           centerTitle: true,
           backgroundColor: Colors.red,
-          elevation: 6.0,
+          elevation: 8.0,
           shadowColor: Colors.black.withOpacity(0.3),
           automaticallyImplyLeading: false,
-          bottom: const TabBar(
-            tabs: <Widget>[
-              Tab(text: 'Business'),
-              Tab(text: 'Profession'),
-            ],
-
-            labelColor: Color.fromARGB(
-                255, 0, 0, 0), // Set the selected tab text color to black
-            unselectedLabelColor: Color.fromARGB(255, 126, 123, 123),
-          ),
+          bottom: CustomTabbar(controller: _tabController),
         ),
         body: TabBarView(
+          controller: _tabController,
           children: [
             Consumer<SeekerProvider>(
               builder: (context, provider, _) => buildSeekerList(
