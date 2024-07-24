@@ -185,7 +185,7 @@ class _AddEditPageState extends State<AddEditPage> {
                               filled: true,
                               fillColor: Colors.grey[100],
                             ),
-                            items: ['Business', 'Job Seeker']
+                            items: ['Business', 'Profession']
                                 .map((category) => DropdownMenuItem(
                                       value: category,
                                       child: Text(category),

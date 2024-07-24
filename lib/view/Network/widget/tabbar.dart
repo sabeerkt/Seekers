@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:seeker/view/Home_Page/widget/serch.dart';
 
 class CustomTabbar extends StatelessWidget {
-  const CustomTabbar({Key? key}) : super(key: key);
+  final TabController controller;
+  const CustomTabbar({Key? key, required this.controller}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

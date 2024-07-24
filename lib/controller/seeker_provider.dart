@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -10,10 +9,16 @@ class SeekerProvider extends ChangeNotifier {
   FirebaseService _firebaseService = FirebaseService();
   String uniquename = DateTime.now().microsecondsSinceEpoch.toString();
   String downloadurl = '';
-  String pdfDownloadUrl = ''; // Add this line
+  String pdfDownloadUrl = '';
 
   Stream<QuerySnapshot<SeekerModel>> getData() {
     return _firebaseService.seekerref.snapshots();
+  }
+
+  Stream<QuerySnapshot<SeekerModel>> getFilteredData(String category) {
+    return _firebaseService.seekerref
+        .where('category', isEqualTo: category)
+        .snapshots();
   }
 
   addSeeker(SeekerModel seeker) async {
@@ -65,7 +70,6 @@ class SeekerProvider extends ChangeNotifier {
         downloadurl = await storedimage.getDownloadURL();
         print("Image uploaded successfully. Download URL: $downloadurl");
       } else {
-        // If no new image or new image is null or doesn't exist, keep the existing URL
         downloadurl = imageurl;
         print("No new image provided. Using existing URL: $downloadurl");
       }
