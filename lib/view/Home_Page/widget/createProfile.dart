@@ -57,7 +57,7 @@ class _AddEditPageState extends State<AddEditPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Seeker' : 'Add Seeker'),
-        backgroundColor: Colors.green,
+        backgroundColor: Colors.red,
         elevation: 0,
       ),
       body: Stack(
@@ -67,7 +67,7 @@ class _AddEditPageState extends State<AddEditPage> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.green[100]!, Colors.white],
+                colors: [Colors.red[100]!, Colors.white],
               ),
             ),
             child: Column(
@@ -125,7 +125,7 @@ class _AddEditPageState extends State<AddEditPage> {
                                 child: Container(
                                   padding: EdgeInsets.all(4),
                                   decoration: BoxDecoration(
-                                    color: Colors.green,
+                                    color: Colors.red,
                                     shape: BoxShape.circle,
                                   ),
                                   child: IconButton(
@@ -316,7 +316,7 @@ class _AddEditPageState extends State<AddEditPage> {
                             child:
                                 Text(isEdit ? 'Update Seeker' : 'Add Seeker'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
+                              backgroundColor: Colors.red,
                               padding: EdgeInsets.symmetric(vertical: 15),
                               textStyle: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold),
@@ -336,7 +336,11 @@ class _AddEditPageState extends State<AddEditPage> {
             Container(
               color: Colors.black.withOpacity(0.5),
               child: Center(
-                child: Lottie.asset('assets/register.json'),
+                child: SizedBox(
+                  width: 200, // Specify your desired width
+                  height: 200, // Specify your desired height
+                  child: Lottie.asset('assets/Animation - 1721967064614.json'),
+                ),
               ),
             ),
         ],

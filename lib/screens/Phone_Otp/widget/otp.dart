@@ -111,7 +111,7 @@ class OtpScreen extends StatelessWidget {
   }
 
   void verifyOtp(BuildContext context) {
-    Provider.of<AuthProvider>(context, listen: false)
+    Provider.of<AuthProviders>(context, listen: false)
         .verifyOtp(verificationid, otpcontroller.text, () {
       Navigator.push(
           context,

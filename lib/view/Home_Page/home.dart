@@ -1,24 +1,50 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:seeker/controller/auth_provider.dart';
+
 import 'package:seeker/controller/seeker_provider.dart';
 import 'package:seeker/model/seeker_model.dart';
 import 'package:seeker/view/Home_Page/widget/createProfile.dart';
 import 'package:seeker/view/Home_Page/widget/cursorslider.dart';
-import 'package:seeker/view/Home_Page/widget/serch.dart';
 import 'package:seeker/view/detailpage/detail.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'dart:io';
 
-class Home_Page extends StatefulWidget {
-  const Home_Page({Key? key}) : super(key: key);
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
 
   @override
-  State<Home_Page> createState() => _Home_PageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _Home_PageState extends State<Home_Page> {
+class _HomePageState extends State<HomePage> {
+  String _userName = 'User';
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserName();
+  }
+
+  Future<void> _getUserName() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (userData.exists) {
+        setState(() {
+          _userName = userData['name'] ?? 'User';
+        });
+      }
+    }
+  }
+
   void navigateToNextPage() async {
     final result = await Navigator.push(
       context,
@@ -60,8 +86,10 @@ class _Home_PageState extends State<Home_Page> {
     }
   }
 
-  Future<void> launchWhatsApp(String phoneNumber) async {
-    final Uri url = Uri.parse('https://wa.me/$phoneNumber');
+  Future<void> launchWhatsApp(String phoneNumber, String message) async {
+    final encodedMessage = Uri.encodeComponent(message);
+    final Uri url =
+        Uri.parse('https://wa.me/$phoneNumber?text=$encodedMessage');
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
@@ -73,10 +101,11 @@ class _Home_PageState extends State<Home_Page> {
 
   @override
   Widget build(BuildContext context) {
+    //final currentUser = Provider.of<AuthProviders>(context).user;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Home",
+        title: Text(
+          "wlecom",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 24.0,
@@ -120,7 +149,6 @@ class _Home_PageState extends State<Home_Page> {
                     hintText: 'Search ...',
                     hintStyle: TextStyle(color: Colors.grey[600]),
                     prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
-                    //suffixIcon: Icon(Icons.mic, color: Colors.grey[600]),
                     border: InputBorder.none,
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -135,7 +163,12 @@ class _Home_PageState extends State<Home_Page> {
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ImageSliderComponent(),
+            child: ImageSliderComponent(
+              onImageTap: (imagePath, index) {
+                String message = 'Let me know more about this ${index + 1}';
+                launchWhatsApp('7510554555', message);
+              },
+            ),
           ),
           Expanded(
             child: Consumer<SeekerProvider>(
@@ -273,8 +306,9 @@ class _Home_PageState extends State<Home_Page> {
                                         ),
                                       ),
                                       ElevatedButton.icon(
-                                        onPressed: () =>
-                                            launchWhatsApp(seeker.number ?? ''),
+                                        onPressed: () => launchWhatsApp(
+                                            seeker.number ?? '',
+                                            'Hello, I would like to know more about your services.'),
                                         icon: Icon(Icons.chat,
                                             color: Colors.white),
                                         label: Text('WhatsApp'),

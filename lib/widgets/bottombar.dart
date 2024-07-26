@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:seeker/view/Home_Page/home.dart';
+
 import 'package:seeker/view/Network/mynetwork.dart';
 import 'package:seeker/view/setting_page/setting.dart';
 
@@ -20,7 +21,7 @@ class _BottomNavState extends State<BottomNav> {
   }
 
   List<Widget> pages = [
-    Home_Page(),
+    HomePage(),
     My_Network(),
     SettingPage(),
   ];

@@ -17,7 +17,7 @@ class PhoneAuthPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final pro = Provider.of<AuthProvider>(context, listen: false);
+    final pro = Provider.of<AuthProviders>(context, listen: false);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

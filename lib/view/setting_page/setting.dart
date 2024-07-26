@@ -29,10 +29,9 @@ class _SettingPageState extends State<SettingPage> {
         elevation: 6.0,
         shadowColor: Colors.black.withOpacity(0.3),
         automaticallyImplyLeading: false,
-       actions: [
-          Consumer<AuthProvider>(
-            builder: (context, value, child) => 
-            IconButton(
+        actions: [
+          Consumer<AuthProviders>(
+            builder: (context, value, child) => IconButton(
               icon: Icon(Icons.logout),
               onPressed: () {
                 value.signOut().then((_) {

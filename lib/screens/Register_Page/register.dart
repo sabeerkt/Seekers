@@ -40,7 +40,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Column(
                   children: [
                     Lottie.asset(
-                      'assets/register.json', // Replace with your image path
+                      'assets/Animation - 1721967145718.json', // Replace with your image path
                       height: 100,
                       width: 100,
                       fit: BoxFit.cover,
@@ -156,7 +156,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
-      await Provider.of<AuthProvider>(context, listen: false).signUpWithEmail(
+      await Provider.of<AuthProviders>(context, listen: false).signUpWithEmail(
         _emailController.text,
         _passwordController.text,
         _usernameController.text,

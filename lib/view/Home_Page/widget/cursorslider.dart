@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
 class ImageSliderComponent extends StatelessWidget {
-  ImageSliderComponent({Key? key}) : super(key: key);
+  final Function(String, int) onImageTap;
+
+  ImageSliderComponent({Key? key, required this.onImageTap}) : super(key: key);
 
   final List<String> homeData = [
     "https://cdn.pixabay.com/photo/2015/06/19/21/24/avenue-815297_640.jpg",
@@ -17,8 +19,7 @@ class ImageSliderComponent extends StatelessWidget {
 
     return Center(
       child: SizedBox(
-        height: MediaQuery.of(context).size.height *
-            0.3, // Set the height to half of the screen
+        height: MediaQuery.of(context).size.height * 0.3,
         width: MediaQuery.of(context).size.width,
         child: Stack(
           alignment: Alignment.center,
@@ -27,39 +28,40 @@ class ImageSliderComponent extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               child: CarouselSlider(
                 carouselController: carouselController,
-                items: homeData.map(
-                  (imagePath) {
-                    return SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: Image.network(
-                        imagePath,
-                        fit: BoxFit.cover,
-                        errorBuilder: (BuildContext context, Object exception,
-                            StackTrace? stackTrace) {
-                          return Image.asset("assets/logo.png");
-                        },
-                        loadingBuilder: (BuildContext context, Widget child,
-                            ImageChunkEvent? loadingProgress) {
-                          if (loadingProgress == null) {
-                            return child;
-                          }
-                          return Center(
-                            child: CircularProgressIndicator(
-                              value: loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                            ),
-                          );
-                        },
+                items: homeData.asMap().entries.map(
+                  (entry) {
+                    int index = entry.key;
+                    String imagePath = entry.value;
+                    return GestureDetector(
+                      onTap: () => onImageTap(imagePath, index),
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        child: Image.network(
+                          imagePath,
+                          fit: BoxFit.cover,
+                          errorBuilder: (BuildContext context, Object exception, StackTrace? stackTrace) {
+                            return Image.asset("assets/logo.png");
+                          },
+                          loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                            if (loadingProgress == null) {
+                              return child;
+                            }
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     );
                   },
                 ).toList(),
                 options: CarouselOptions(
                   viewportFraction: 1,
-                  height: MediaQuery.of(context).size.height *
-                      0.48, // Adjust the carousel height
+                  height: MediaQuery.of(context).size.height * 0.48,
                   autoPlay: true,
                 ),
               ),
@@ -98,8 +100,7 @@ class ImageSliderComponent extends StatelessWidget {
                       backgroundColor: Colors.white.withOpacity(.5),
                       child: const Padding(
                         padding: EdgeInsets.all(8),
-                        child: Icon(Icons.arrow_forward_ios_outlined,
-                            color: Colors.black),
+                        child: Icon(Icons.arrow_forward_ios_outlined, color: Colors.black),
                       ),
                     ),
                   ),

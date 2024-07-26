@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:seeker/service/auth_service.dart';
 
-class AuthProvider with ChangeNotifier {
+class AuthProviders with ChangeNotifier {
   AuthService _service = AuthService();
 
   Future<UserCredential> signInWithEmail(String email, String password) async {

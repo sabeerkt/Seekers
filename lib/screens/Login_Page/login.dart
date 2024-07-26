@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final pro = Provider.of<AuthProvider>(context, listen: false);
+    final pro = Provider.of<AuthProviders>(context, listen: false);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -98,26 +98,29 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Forgot_Password(),
-                          ),
-                        );
-                      },
-                      // child: const Text(
-                      //   'Forgot your password?',
-                      //   style: TextStyle(color: Colors.red),
+                SizedBox(
+                  width: double.infinity,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      // InkWell(
+                      //   onTap: () {
+                      //     Navigator.push(
+                      //       context,
+                      //       MaterialPageRoute(
+                      //         builder: (context) => const Forgot_Password(),
+                      //       ),
+                      //     );
+                      //   },
+                      //   child: const Text(
+                      //     'Forgot your password?',
+                      //     style: TextStyle(color: Colors.red),
+                      //   ),
                       // ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 30),
                 Button(
                   onTap: () async {
                     try {
