@@ -177,7 +177,7 @@ class _My_NetworkState extends State<My_Network> with TickerProviderStateMixin {
                               icon: Icon(Icons.call, color: Colors.white),
                               label: Text('Call'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
+                                backgroundColor: Colors.red,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),
@@ -189,7 +189,7 @@ class _My_NetworkState extends State<My_Network> with TickerProviderStateMixin {
                               icon: Icon(Icons.chat, color: Colors.white),
                               label: Text('WhatsApp'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
+                                backgroundColor: Colors.green,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20),
                                 ),

@@ -14,6 +14,9 @@ class AuthProviders with ChangeNotifier {
     }
   }
 
+
+
+
   Future<UserCredential> signUpWithEmail(String email, String password, String name) async {
     try {
       UserCredential userCredential = await _service.signUpWithEmail(email, password, name);

@@ -1,17 +1,15 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:seeker/controller/auth_provider.dart';
-
 import 'package:seeker/controller/seeker_provider.dart';
 import 'package:seeker/model/seeker_model.dart';
 import 'package:seeker/view/Home_Page/widget/createProfile.dart';
 import 'package:seeker/view/Home_Page/widget/cursorslider.dart';
 import 'package:seeker/view/detailpage/detail.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-import 'dart:io';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -22,14 +20,15 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String _userName = 'User';
+  String _userImage = '';
 
   @override
   void initState() {
     super.initState();
-    _getUserName();
+    _getUserInfo();
   }
 
-  Future<void> _getUserName() async {
+  Future<void> _getUserInfo() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       DocumentSnapshot userData = await FirebaseFirestore.instance
@@ -39,7 +38,8 @@ class _HomePageState extends State<HomePage> {
 
       if (userData.exists) {
         setState(() {
-          _userName = userData['name'] ?? 'User';
+          _userName = userData['username'] ?? 'username';
+          _userImage = userData['image'] ?? '';
         });
       }
     }
@@ -101,16 +101,19 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    //final currentUser = Provider.of<AuthProviders>(context).user;
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "wlecom",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 24.0,
-            color: Colors.white,
-          ),
+        title: Row(
+          children: [
+            Text(
+              "Welcome, $_userName",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 24.0,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         centerTitle: true,
         backgroundColor: Colors.red,
@@ -298,7 +301,7 @@ class _HomePageState extends State<HomePage> {
                                             color: Colors.white),
                                         label: Text('Call'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.green,
+                                          backgroundColor: Colors.red,
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
                                                 BorderRadius.circular(20),
@@ -308,12 +311,12 @@ class _HomePageState extends State<HomePage> {
                                       ElevatedButton.icon(
                                         onPressed: () => launchWhatsApp(
                                             seeker.number ?? '',
-                                            'Hello, I would like to know more about your services.'),
-                                        icon: Icon(Icons.chat,
+                                            'Hi, I am interested in your profile.'),
+                                        icon: Icon(Icons.message,
                                             color: Colors.white),
                                         label: Text('WhatsApp'),
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.blue,
+                                          backgroundColor: Colors.green,
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
                                                 BorderRadius.circular(20),
@@ -336,13 +339,11 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: navigateToNextPage,
-        label: const Text('Create a Profile'),
-        icon: const Icon(Icons.add),
+        child: Icon(Icons.add),
         backgroundColor: Colors.red,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.miniStartFloat,
     );
   }
 }
