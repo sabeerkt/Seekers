@@ -11,8 +11,10 @@ class SeekerProvider extends ChangeNotifier {
   String downloadurl = '';
   String _searchQuery = '';
   String pdfDownloadUrl = '';
+  final List<SeekerModel> _favorites = []; // Add this line
 
   String get searchQuery => _searchQuery;
+  List<SeekerModel> get favorites => _favorites; // Add this line
 
   Stream<QuerySnapshot<SeekerModel>> getData() {
     if (_searchQuery.isEmpty) {
@@ -34,6 +36,20 @@ class SeekerProvider extends ChangeNotifier {
   void updateSearchQuery(String query) {
     _searchQuery = query;
     notifyListeners();
+  }
+
+  void addFavorite(SeekerModel seeker) {
+    _favorites.add(seeker);
+    notifyListeners();
+  }
+
+  void removeFavorite(SeekerModel seeker) {
+    _favorites.removeWhere((item) => item.id == seeker.id);
+    notifyListeners();
+  }
+
+  bool isFavorite(SeekerModel seeker) {
+    return _favorites.any((item) => item.id == seeker.id);
   }
 
   addSeeker(SeekerModel seeker) async {

@@ -1,29 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:seeker/controller/seeker_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'package:seeker/model/seeker_model.dart';
+import 'package:provider/provider.dart';
 
 class DetailPage extends StatelessWidget {
-  final String username;
-  final String subtitle;
-  final String phoneNumber;
-  final String pdfUrl;
-  final String image;
-  final String category;
-  final String description;
+  final SeekerModel seeker;
 
   const DetailPage({
     Key? key,
-    required this.username,
-    required this.subtitle,
-    required this.phoneNumber,
-    required this.pdfUrl,
-    required this.image,
-    required this.category,
-    required this.description,
+    required this.seeker,
   }) : super(key: key);
 
   void _makePhoneCall(String url) async {
@@ -63,24 +54,24 @@ class DetailPage extends StatelessWidget {
                   color: Colors.black.withOpacity(0.1),
                   spreadRadius: 5,
                   blurRadius: 7,
-                  offset: Offset(0, 3),
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
             child: Column(
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         'PDF Viewer',
                         style: TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       IconButton(
-                        icon: Icon(Icons.close),
+                        icon: const Icon(Icons.close),
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                     ],
@@ -89,21 +80,21 @@ class DetailPage extends StatelessWidget {
                 Expanded(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: PDFView(filePath: pdfUrl),
+                    child: PDFView(filePath: seeker.pdf ?? ''),
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: ElevatedButton.icon(
-                    onPressed: () =>
-                        _downloadFile(context, pdfUrl, 'document.pdf'),
-                    icon: Icon(Icons.download),
-                    label: Text('Download PDF'),
+                    onPressed: () => _downloadFile(
+                        context, seeker.pdf ?? '', 'document.pdf'),
+                    icon: const Icon(Icons.download),
+                    label: const Text('Download PDF'),
                     style: ElevatedButton.styleFrom(
                       foregroundColor: Colors.white,
                       backgroundColor: Colors.blue,
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30)),
                     ),
@@ -145,18 +136,41 @@ class DetailPage extends StatelessWidget {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Storage permission denied')),
+        const SnackBar(content: Text('Storage permission denied')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+   final seekerProvider = Provider.of<SeekerProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.red,
-        title: Text(username),
+        title: Text(seeker.name ?? 'Details'),
         elevation: 0,
+        actions: [
+          Consumer<SeekerProvider>(
+          builder: (context, provider, child) {
+            return IconButton(
+              icon: Icon(
+                provider.isFavorite(seeker)
+                    ? Icons.favorite
+                    : Icons.favorite_border,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                if (provider.isFavorite(seeker)) {
+                  provider.removeFavorite(seeker);
+                } else {
+                  provider.addFavorite(seeker);
+                }
+              },
+            );
+          },
+        ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -164,7 +178,7 @@ class DetailPage extends StatelessWidget {
           children: <Widget>[
             Container(
               height: 200,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.red,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(30),
@@ -186,29 +200,29 @@ class DetailPage extends StatelessWidget {
                 children: [
                   Center(
                     child: Text(
-                      username,
-                      style:
-                          TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                      seeker.name ?? '',
+                      style: const TextStyle(
+                          fontSize: 28, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  Text(
+                  const Text(
                     'Contact Options:',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   _buildContactOption(context),
-                  SizedBox(height: 20),
-                  _buildInfoSection('Subtitle', subtitle),
-                  _buildInfoSection('Description', description),
-                  _buildInfoSection('Category', category),
-                  SizedBox(height: 20),
-                  Text(
+                  const SizedBox(height: 20),
+                  _buildInfoSection('Subtitle', seeker.secondname ?? ''),
+                  _buildInfoSection('Description', seeker.description ?? ''),
+                  _buildInfoSection('Category', seeker.category ?? ''),
+                  const SizedBox(height: 20),
+                  const Text(
                     'Uploaded Document:',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   _buildPdfSection(context),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -219,18 +233,19 @@ class DetailPage extends StatelessWidget {
   }
 
   ImageProvider _getImageProvider() {
-    if (image.startsWith('http') || image.startsWith('https')) {
-      return NetworkImage(image);
-    } else if (image.isNotEmpty) {
-      return FileImage(File(image));
+    if ((seeker.image ?? '').startsWith('http') ||
+        (seeker.image ?? '').startsWith('https')) {
+      return NetworkImage(seeker.image!);
+    } else if (seeker.image != null && seeker.image!.isNotEmpty) {
+      return FileImage(File(seeker.image!));
     } else {
-      return AssetImage('assets/default_profile.png');
+      return const AssetImage('assets/default_profile.png');
     }
   }
 
   Widget? _getImageErrorWidget() {
-    if (image.isEmpty) {
-      return Icon(Icons.person, size: 70, color: Colors.black);
+    if (seeker.image == null || seeker.image!.isEmpty) {
+      return const Icon(Icons.person, size: 70, color: Colors.black);
     }
     return null;
   }
@@ -246,12 +261,12 @@ class DetailPage extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Colors.grey[700]),
         ),
-        SizedBox(height: 5),
+        const SizedBox(height: 5),
         Text(
           content,
-          style: TextStyle(fontSize: 16, color: Colors.black87),
+          style: const TextStyle(fontSize: 16, color: Colors.black87),
         ),
-        SizedBox(height: 15),
+        const SizedBox(height: 15),
       ],
     );
   }
@@ -271,21 +286,22 @@ class DetailPage extends StatelessWidget {
             color: Colors.grey.withOpacity(0.3),
             spreadRadius: 2,
             blurRadius: 5,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: pdfUrl.isNotEmpty
+      child: (seeker.pdf ?? '').isNotEmpty
           ? Center(
               child: ElevatedButton.icon(
                 onPressed: () => _openPdfPopup(context),
-                icon: Icon(Icons.picture_as_pdf, color: Colors.red),
-                label: Text('View PDF',
+                icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                label: const Text('View PDF',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.blue[700],
                   backgroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30)),
                 ),
@@ -295,7 +311,7 @@ class DetailPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.picture_as_pdf, size: 60, color: Colors.blue[700]),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text(
                   'No PDF Available',
                   style: TextStyle(
@@ -307,34 +323,60 @@ class DetailPage extends StatelessWidget {
   }
 
   Widget _buildContactOption(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () => _makePhoneCall('tel:$phoneNumber'),
-            icon: Icon(Icons.call, color: Colors.white),
-            label: Text('Call', style: TextStyle(color: Colors.white)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            const Icon(Icons.phone, color: Colors.green),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () => _makePhoneCall('tel:${seeker.number ?? ''}'),
+              child: Text(
+                seeker.number ?? 'No phone number',
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
+              ),
             ),
-          ),
+          ],
         ),
-        SizedBox(width: 10),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () => _openWhatsApp(phoneNumber),
-            icon: Icon(Icons.message, color: Colors.white),
-            label: Text('WhatsApp', style: TextStyle(color: Colors.white)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30)),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            const Icon(Icons.email, color: Colors.red),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () => launch('mailto:${seeker.email ?? ''}'),
+              child: Text(
+                seeker.email ?? 'No email',
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
+              ),
             ),
-          ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: <Widget>[
+            Icon(Icons.message, color: Colors.green),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () => _openWhatsApp(seeker.number ?? ''),
+              child: const Text(
+                'WhatsApp',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
+              ),
+            ),
+          ],
         ),
       ],
     );

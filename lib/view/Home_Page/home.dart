@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +7,7 @@ import 'package:seeker/controller/seeker_provider.dart';
 import 'package:seeker/model/seeker_model.dart';
 import 'package:seeker/view/Home_Page/widget/createProfile.dart';
 import 'package:seeker/view/Home_Page/widget/cursorslider.dart';
+import 'package:seeker/view/Home_Page/widget/fvrt.dart';
 import 'package:seeker/view/detailpage/detail.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -62,15 +62,7 @@ class _HomePageState extends State<HomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DetailPage(
-          username: seeker.name ?? '',
-          subtitle: seeker.secondname ?? '',
-          phoneNumber: seeker.number ?? '',
-          pdfUrl: seeker.pdf ?? '',
-          image: seeker.image ?? '',
-          category: seeker.category ?? '',
-          description: seeker.description ?? '',
-        ),
+        builder: (context) => DetailPage(seeker: seeker),
       ),
     );
   }
@@ -123,7 +115,10 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.favorite, color: Colors.white),
             onPressed: () {
-              // Your code for the notifications button action
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FvrtPage()),
+              );
             },
           ),
         ],
@@ -341,7 +336,7 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: navigateToNextPage,
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         backgroundColor: Colors.red,
       ),
     );

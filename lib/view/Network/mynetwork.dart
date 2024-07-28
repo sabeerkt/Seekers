@@ -43,19 +43,11 @@ class _My_NetworkState extends State<My_Network> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  void navigateToDetailPage(SeekerModel seeker) {
+   void navigateToDetailPage(SeekerModel seeker) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => DetailPage(
-          username: seeker.name ?? '',
-          subtitle: seeker.secondname ?? '',
-          phoneNumber: seeker.number ?? '',
-          pdfUrl: seeker.pdf ?? '',
-          image: seeker.image ?? '',
-          category: seeker.category ?? '',
-          description: seeker.description ?? '',
-        ),
+        builder: (context) => DetailPage(seeker: seeker),
       ),
     );
   }
