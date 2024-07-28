@@ -11,10 +11,10 @@ class SeekerProvider extends ChangeNotifier {
   String downloadurl = '';
   String _searchQuery = '';
   String pdfDownloadUrl = '';
-  final List<SeekerModel> _favorites = []; // Add this line
+  List<SeekerModel> _favorites = [];
 
   String get searchQuery => _searchQuery;
-  List<SeekerModel> get favorites => _favorites; // Add this line
+  List<SeekerModel> get favorites => _favorites;
 
   Stream<QuerySnapshot<SeekerModel>> getData() {
     if (_searchQuery.isEmpty) {
@@ -38,18 +38,40 @@ class SeekerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addFavorite(SeekerModel seeker) {
-    _favorites.add(seeker);
-    notifyListeners();
+  Future<void> loadFavorites() async {
+    try {
+      final snapshot = await _firebaseService.favoritesRef.get();
+      _favorites = snapshot.docs.map((doc) => doc.data()).toList();
+      notifyListeners();
+    } catch (e) {
+      print('Error loading favorites: $e');
+    }
   }
 
-  void removeFavorite(SeekerModel seeker) {
-    _favorites.removeWhere((item) => item.id == seeker.id);
-    notifyListeners();
+  Future<void> addFavorite(SeekerModel seeker) async {
+    try {
+      await _firebaseService.favoritesRef.doc(seeker.id).set(seeker);
+      _favorites.add(seeker);
+      notifyListeners();
+    } catch (e) {
+      print('Error adding favorite: $e');
+    }
+  }
+
+  Future<void> removeFavorite(SeekerModel seeker) async {
+    try {
+      print('Removing favorite with id: ${seeker.id}');
+      await _firebaseService.favoritesRef.doc(seeker.id).delete();
+      _favorites.removeWhere((item) => item.id == seeker.id);
+      notifyListeners();
+    } catch (e) {
+      print('Error removing favorite: $e');
+    }
   }
 
   bool isFavorite(SeekerModel seeker) {
     return _favorites.any((item) => item.id == seeker.id);
+    
   }
 
   addSeeker(SeekerModel seeker) async {

@@ -143,7 +143,7 @@ class DetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-   final seekerProvider = Provider.of<SeekerProvider>(context, listen: false);
+    final seekerProvider = Provider.of<SeekerProvider>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -152,24 +152,24 @@ class DetailPage extends StatelessWidget {
         elevation: 0,
         actions: [
           Consumer<SeekerProvider>(
-          builder: (context, provider, child) {
-            return IconButton(
-              icon: Icon(
-                provider.isFavorite(seeker)
-                    ? Icons.favorite
-                    : Icons.favorite_border,
-                color: Colors.white,
-              ),
-              onPressed: () {
-                if (provider.isFavorite(seeker)) {
-                  provider.removeFavorite(seeker);
-                } else {
-                  provider.addFavorite(seeker);
-                }
-              },
-            );
-          },
-        ),
+            builder: (context, provider, child) {
+              return IconButton(
+                icon: Icon(
+                  seekerProvider.isFavorite(seeker)
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  if (seekerProvider.isFavorite(seeker)) {
+                    seekerProvider.removeFavorite(seeker);
+                  } else {
+                    seekerProvider.addFavorite(seeker);
+                  }
+                },
+              );
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(
