@@ -1,7 +1,7 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:seeker/controller/seeker_provider.dart';
 import 'package:seeker/model/seeker_model.dart';
@@ -83,7 +83,7 @@ class _HomePageState extends State<HomePage> {
     final Uri url =
         Uri.parse('https://wa.me/$phoneNumber?text=$encodedMessage');
     if (await canLaunchUrl(url)) {
-      await launchUrl(url);
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not launch WhatsApp')),
@@ -95,17 +95,13 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Text(
-              "Welcome, $_userName",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 24.0,
-                color: Colors.white,
-              ),
-            ),
-          ],
+        title: Text(
+          "Welcome, $_userName",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 24.0,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.red,
@@ -219,19 +215,16 @@ class _HomePageState extends State<HomePage> {
                                           ],
                                         ),
                                         child: CircleAvatar(
-                                          child: seeker.image != null
-                                              ? Image.file(
-                                                  File(seeker.image!),
-                                                  fit: BoxFit.cover,
+                                          backgroundImage: seeker.image != null
+                                              ? FileImage(File(seeker.image!))
+                                              : null,
+                                          child: seeker.image == null
+                                              ? Icon(
+                                                  Icons.person,
+                                                  size: 40,
+                                                  color: Colors.blue[800],
                                                 )
-                                              : Container(
-                                                  color: Colors.blue[100],
-                                                  child: Icon(
-                                                    Icons.person,
-                                                    size: 40,
-                                                    color: Colors.blue[800],
-                                                  ),
-                                                ),
+                                              : null,
                                         ),
                                       ),
                                       SizedBox(width: 20),

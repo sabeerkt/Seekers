@@ -102,6 +102,8 @@ class SeekerProvider extends ChangeNotifier {
     }
   }
 
+  
+
   pdfAdder(pdfFile) async {
     Reference folder = _firebaseService.storage.ref().child('pdfs');
     Reference pdfs = folder.child("$uniquename.pdf");
