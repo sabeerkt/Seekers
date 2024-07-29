@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -71,7 +72,6 @@ class SeekerProvider extends ChangeNotifier {
 
   bool isFavorite(SeekerModel seeker) {
     return _favorites.any((item) => item.id == seeker.id);
-    
   }
 
   addSeeker(SeekerModel seeker) async {
@@ -88,21 +88,28 @@ class SeekerProvider extends ChangeNotifier {
     await _firebaseService.seekerref.doc(id).update(seeker.toJson());
     notifyListeners();
   }
+Future<void> imageAdder(dynamic image) async {
+  Reference folder = _firebaseService.storage.ref().child('images');
+  Reference images = folder.child("$uniquename.jpg");
 
-  imageAdder(image) async {
-    Reference folder = _firebaseService.storage.ref().child('images');
-    Reference images = folder.child("$uniquename.jpg");
-    try {
+  try {
+    if (image is File) {
+      // Upload from File
       await images.putFile(image);
-      downloadurl = await images.getDownloadURL();
-      notifyListeners();
-      print(downloadurl);
-    } catch (e) {
-      throw Exception(e);
+    } else if (image is Uint8List) {
+      // Upload from Uint8List
+      await images.putData(image);
+    } else {
+      throw Exception('Invalid image type');
     }
-  }
 
-  
+    downloadurl = await images.getDownloadURL();
+    notifyListeners();
+    print(downloadurl);
+  } catch (e) {
+    throw Exception(e);
+  }
+}
 
   pdfAdder(pdfFile) async {
     Reference folder = _firebaseService.storage.ref().child('pdfs');

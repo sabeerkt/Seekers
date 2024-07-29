@@ -216,7 +216,15 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                         child: CircleAvatar(
                                           backgroundImage: seeker.image != null
-                                              ? FileImage(File(seeker.image!))
+                                              ? (seeker.image!
+                                                          .startsWith('http') ||
+                                                      seeker.image!
+                                                          .startsWith('https'))
+                                                  ? NetworkImage(seeker.image!)
+                                                      as ImageProvider
+                                                  : FileImage(
+                                                          File(seeker.image!))
+                                                      as ImageProvider
                                               : null,
                                           child: seeker.image == null
                                               ? Icon(

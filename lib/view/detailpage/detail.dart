@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:seeker/controller/seeker_provider.dart';
+import 'package:seeker/view/Home_Page/widget/createProfile.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -151,6 +152,16 @@ class DetailPage extends StatelessWidget {
         title: Text(seeker.name ?? 'Details'),
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AddEditPage(student: seeker),
+                  ));
+            },
+          ),
           Consumer<SeekerProvider>(
             builder: (context, provider, child) {
               return IconButton(

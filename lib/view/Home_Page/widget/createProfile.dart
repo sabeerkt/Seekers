@@ -82,8 +82,8 @@ class _AddEditPageState extends State<AddEditPage> {
                         builder: (context, provider, child) {
                           final image = kIsWeb
                               ? provider.selectedImageWeb
-                              : provider.selectedImage?.path ??
-                                  selectedImage?.path;
+                              : provider.selectedImage?.path;
+
                           return Stack(
                             alignment: Alignment.bottomRight,
                             children: [
@@ -109,8 +109,7 @@ class _AddEditPageState extends State<AddEditPage> {
                                               fit: BoxFit.cover)
                                           : Image.file(File(image),
                                               fit: BoxFit.cover)
-                                      : widget.student != null &&
-                                              widget.student!.image != null
+                                      : widget.student?.image != null
                                           ? Image.network(
                                               widget.student!.image!,
                                               fit: BoxFit.cover)
@@ -132,7 +131,7 @@ class _AddEditPageState extends State<AddEditPage> {
                                     icon: Icon(Icons.camera_alt,
                                         color: Colors.white, size: 20),
                                     onPressed: () =>
-                                        pro.setImage(ImageSource.gallery),
+                                        provider.setImage(ImageSource.gallery),
                                   ),
                                 ),
                               ),
