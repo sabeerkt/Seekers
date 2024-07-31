@@ -26,6 +26,14 @@ class DetailPage extends StatefulWidget {
 }
 
 class _DetailPageState extends State<DetailPage> {
+  late SeekerModel _currentSeeker;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentSeeker = widget.seeker;
+  }
+
   void _makePhoneCall(String url) async {
     if (await canLaunch(url)) {
       await launch(url);
@@ -58,7 +66,7 @@ class _DetailPageState extends State<DetailPage> {
               ),
             ),
             body: PDFView(
-              filePath: widget.seeker.pdf ?? '',
+              filePath: _currentSeeker.pdf ?? '',
               enableSwipe: true,
               swipeHorizontal: true,
               autoSpacing: false,
@@ -84,18 +92,22 @@ class _DetailPageState extends State<DetailPage> {
         String newImageUrl = seekerProvider.downloadurl;
 
         SeekerModel updatedSeeker = SeekerModel(
-          id: widget.seeker.id,
-          name: widget.seeker.name,
-          secondname: widget.seeker.secondname,
-          email: widget.seeker.email,
-          number: widget.seeker.number,
-          description: widget.seeker.description,
-          pdf: widget.seeker.pdf,
-          category: widget.seeker.category,
+          id: _currentSeeker.id,
+          name: _currentSeeker.name,
+          secondname: _currentSeeker.secondname,
+          email: _currentSeeker.email,
+          number: _currentSeeker.number,
+          description: _currentSeeker.description,
+          pdf: _currentSeeker.pdf,
+          category: _currentSeeker.category,
           image: newImageUrl,
         );
 
-        await seekerProvider.updateSeeker(widget.seeker.id!, updatedSeeker);
+        await seekerProvider.updateSeeker(_currentSeeker.id!, updatedSeeker);
+
+        setState(() {
+          _currentSeeker = updatedSeeker;
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Image uploaded successfully')),
@@ -110,7 +122,7 @@ class _DetailPageState extends State<DetailPage> {
 
   bool _isCurrentUser() {
     final currentUser = FirebaseAuth.instance.currentUser;
-    return currentUser != null && currentUser.uid == widget.seeker.id;
+    return currentUser != null && currentUser.uid == _currentSeeker.id;
   }
 
   @override
@@ -120,7 +132,7 @@ class _DetailPageState extends State<DetailPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.red,
-        title: Text(widget.seeker.name ?? 'Details'),
+        title: Text(_currentSeeker.name ?? 'Details'),
         elevation: 0,
         actions: [
           if (_isCurrentUser())
@@ -130,7 +142,7 @@ class _DetailPageState extends State<DetailPage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddEditPage(student: widget.seeker),
+                    builder: (context) => AddEditPage(student: _currentSeeker),
                   ),
                 );
               },
@@ -139,16 +151,16 @@ class _DetailPageState extends State<DetailPage> {
             builder: (context, provider, child) {
               return IconButton(
                 icon: Icon(
-                  seekerProvider.isFavorite(widget.seeker)
+                  seekerProvider.isFavorite(_currentSeeker)
                       ? Icons.favorite
                       : Icons.favorite_border,
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  if (seekerProvider.isFavorite(widget.seeker)) {
-                    seekerProvider.removeFavorite(widget.seeker);
+                  if (seekerProvider.isFavorite(_currentSeeker)) {
+                    seekerProvider.removeFavorite(_currentSeeker);
                   } else {
-                    seekerProvider.addFavorite(widget.seeker);
+                    seekerProvider.addFavorite(_currentSeeker);
                   }
                 },
               );
@@ -173,7 +185,6 @@ class _DetailPageState extends State<DetailPage> {
                 child: CircleAvatar(
                   radius: 70,
                   backgroundImage: _getImageProvider(),
-                  child: _getImageErrorWidget(),
                 ),
               ),
             ),
@@ -184,7 +195,7 @@ class _DetailPageState extends State<DetailPage> {
                 children: [
                   Center(
                     child: Text(
-                      widget.seeker.name ?? '',
+                      _currentSeeker.name ?? '',
                       style: const TextStyle(
                           fontSize: 28, fontWeight: FontWeight.bold),
                     ),
@@ -196,10 +207,11 @@ class _DetailPageState extends State<DetailPage> {
                   const SizedBox(height: 10),
                   _buildContactOption(context),
                   const SizedBox(height: 20),
-                  _buildInfoSection('Subtitle', widget.seeker.secondname ?? ''),
                   _buildInfoSection(
-                      'Description', widget.seeker.description ?? ''),
-                  _buildInfoSection('Category', widget.seeker.category ?? ''),
+                      'Subtitle', _currentSeeker.secondname ?? ''),
+                  _buildInfoSection(
+                      'Description', _currentSeeker.description ?? ''),
+                  _buildInfoSection('Category', _currentSeeker.category ?? ''),
                   const SizedBox(height: 20),
                   const Text(
                     'Uploaded Document:',
@@ -207,6 +219,13 @@ class _DetailPageState extends State<DetailPage> {
                   ),
                   const SizedBox(height: 10),
                   _buildPdfSection(context),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Uploaded Image:',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildImageSection(),
                   const SizedBox(height: 20),
                   if (_isCurrentUser())
                     ElevatedButton.icon(
@@ -225,36 +244,19 @@ class _DetailPageState extends State<DetailPage> {
           ],
         ),
       ),
-      floatingActionButton: Consumer<SeekerProvider>(
-        builder: (context, value, child) => FloatingActionButton(
-          onPressed: () => seekerProvider.imageAdderSeeker(context),
-          child: const Icon(Icons.add_photo_alternate),
-          backgroundColor: Colors.red,
-        ),
-      ),
     );
   }
 
   ImageProvider _getImageProvider() {
-    if ((widget.seeker.image ?? '').startsWith('http') ||
-        (widget.seeker.image ?? '').startsWith('https')) {
-      return NetworkImage(widget.seeker.image!);
-    } else if (widget.seeker.image != null && widget.seeker.image!.isNotEmpty) {
-      return FileImage(File(widget.seeker.image!));
+    if ((_currentSeeker.image ?? '').startsWith('http') ||
+        (_currentSeeker.image ?? '').startsWith('https')) {
+      return NetworkImage(_currentSeeker.image!);
+    } else if (_currentSeeker.image != null &&
+        _currentSeeker.image!.isNotEmpty) {
+      return FileImage(File(_currentSeeker.image!));
     } else {
       return const AssetImage('assets/default_profile.jpg');
     }
-  }
-
-  Widget _getImageErrorWidget() {
-    return Container(
-      color: Colors.transparent,
-      alignment: Alignment.center,
-      child: const Text(
-        'Error loading image',
-        style: TextStyle(color: Colors.red),
-      ),
-    );
   }
 
   Widget _buildContactOption(BuildContext context) {
@@ -262,18 +264,18 @@ class _DetailPageState extends State<DetailPage> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         IconButton(
-          onPressed: () => _makePhoneCall('tel:${widget.seeker.number}'),
+          onPressed: () => _makePhoneCall('tel:${_currentSeeker.number}'),
           icon: const Icon(Icons.call, color: Colors.green, size: 40),
         ),
         IconButton(
-          onPressed: () => _openWhatsApp(widget.seeker.number ?? ''),
+          onPressed: () => _openWhatsApp(_currentSeeker.number ?? ''),
           icon: const Icon(Icons.message, color: Colors.green, size: 40),
         ),
         IconButton(
           onPressed: () {
             final Uri emailLaunchUri = Uri(
               scheme: 'mailto',
-              path: widget.seeker.email ?? '',
+              path: _currentSeeker.email ?? '',
             );
             launch(emailLaunchUri.toString());
           },
@@ -306,7 +308,7 @@ class _DetailPageState extends State<DetailPage> {
   Widget _buildPdfSection(BuildContext context) {
     return Column(
       children: [
-        if (widget.seeker.pdf != null && widget.seeker.pdf!.isNotEmpty)
+        if (_currentSeeker.pdf != null && _currentSeeker.pdf!.isNotEmpty)
           Column(
             children: [
               ElevatedButton.icon(
@@ -328,6 +330,30 @@ class _DetailPageState extends State<DetailPage> {
         else
           const Text(
             'No document uploaded',
+            style: TextStyle(fontSize: 18),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildImageSection() {
+    return Column(
+      children: [
+        if (_currentSeeker.image != null && _currentSeeker.image!.isNotEmpty)
+          Container(
+            width: double.infinity,
+            height: 200,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: _getImageProvider(),
+                fit: BoxFit.cover,
+              ),
+              borderRadius: BorderRadius.circular(10),
+            ),
+          )
+        else
+          const Text(
+            'No image uploaded',
             style: TextStyle(fontSize: 18),
           ),
       ],
