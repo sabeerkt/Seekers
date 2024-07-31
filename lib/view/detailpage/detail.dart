@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:seeker/controller/seeker_provider.dart';
 import 'package:seeker/view/Home_Page/widget/createProfile.dart';
@@ -9,8 +10,10 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:seeker/model/seeker_model.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class DetailPage extends StatelessWidget {
+class DetailPage extends StatefulWidget {
   final SeekerModel seeker;
 
   const DetailPage({
@@ -18,6 +21,11 @@ class DetailPage extends StatelessWidget {
     required this.seeker,
   }) : super(key: key);
 
+  @override
+  State<DetailPage> createState() => _DetailPageState();
+}
+
+class _DetailPageState extends State<DetailPage> {
   void _makePhoneCall(String url) async {
     if (await canLaunch(url)) {
       await launch(url);
@@ -36,110 +44,73 @@ class DetailPage extends StatelessWidget {
   }
 
   void _openPdfPopup(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.8,
-            width: MediaQuery.of(context).size.width * 0.9,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  spreadRadius: 5,
-                  blurRadius: 7,
-                  offset: const Offset(0, 3),
-                ),
-              ],
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (BuildContext context) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('PDF Viewer'),
+              backgroundColor: Colors.red,
+              leading: IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
             ),
-            child: Column(
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'PDF Viewer',
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: PDFView(filePath: seeker.pdf ?? ''),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: ElevatedButton.icon(
-                    onPressed: () => _downloadFile(
-                        context, seeker.pdf ?? '', 'document.pdf'),
-                    icon: const Icon(Icons.download),
-                    label: const Text('Download PDF'),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30)),
-                    ),
-                  ),
-                ),
-              ],
+            body: PDFView(
+              filePath: widget.seeker.pdf ?? '',
+              enableSwipe: true,
+              swipeHorizontal: true,
+              autoSpacing: false,
+              pageFling: false,
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
-  Future<void> _downloadFile(
-      BuildContext context, String url, String fileName) async {
-    final status = await Permission.storage.request();
-    if (status.isGranted) {
-      final dir = await getExternalStorageDirectory();
-      final savePath = "${dir!.path}/$fileName";
-      final dio = Dio();
+  Future<void> _uploadImage(BuildContext context) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+      final seekerProvider =
+          Provider.of<SeekerProvider>(context, listen: false);
 
       try {
-        await dio.download(
-          url,
-          savePath,
-          onReceiveProgress: (received, total) {
-            if (total != -1) {
-              print((received / total * 100).toStringAsFixed(0) + "%");
-            }
-          },
+        await seekerProvider.imageAdder(imageFile);
+        String newImageUrl = seekerProvider.downloadurl;
+
+        SeekerModel updatedSeeker = SeekerModel(
+          id: widget.seeker.id,
+          name: widget.seeker.name,
+          secondname: widget.seeker.secondname,
+          email: widget.seeker.email,
+          number: widget.seeker.number,
+          description: widget.seeker.description,
+          pdf: widget.seeker.pdf,
+          category: widget.seeker.category,
+          image: newImageUrl,
         );
+
+        await seekerProvider.updateSeeker(widget.seeker.id!, updatedSeeker);
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PDF downloaded successfully to $savePath')),
+          SnackBar(content: Text('Image uploaded successfully')),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Download failed: $e')),
+          SnackBar(content: Text('Failed to upload image: $e')),
         );
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Storage permission denied')),
-      );
     }
+  }
+
+  bool _isCurrentUser() {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    return currentUser != null && currentUser.uid == widget.seeker.id;
   }
 
   @override
@@ -149,33 +120,35 @@ class DetailPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.red,
-        title: Text(seeker.name ?? 'Details'),
+        title: Text(widget.seeker.name ?? 'Details'),
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.push(
+          if (_isCurrentUser())
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => AddEditPage(student: seeker),
-                  ));
-            },
-          ),
+                    builder: (context) => AddEditPage(student: widget.seeker),
+                  ),
+                );
+              },
+            ),
           Consumer<SeekerProvider>(
             builder: (context, provider, child) {
               return IconButton(
                 icon: Icon(
-                  seekerProvider.isFavorite(seeker)
+                  seekerProvider.isFavorite(widget.seeker)
                       ? Icons.favorite
                       : Icons.favorite_border,
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  if (seekerProvider.isFavorite(seeker)) {
-                    seekerProvider.removeFavorite(seeker);
+                  if (seekerProvider.isFavorite(widget.seeker)) {
+                    seekerProvider.removeFavorite(widget.seeker);
                   } else {
-                    seekerProvider.addFavorite(seeker);
+                    seekerProvider.addFavorite(widget.seeker);
                   }
                 },
               );
@@ -211,7 +184,7 @@ class DetailPage extends StatelessWidget {
                 children: [
                   Center(
                     child: Text(
-                      seeker.name ?? '',
+                      widget.seeker.name ?? '',
                       style: const TextStyle(
                           fontSize: 28, fontWeight: FontWeight.bold),
                     ),
@@ -223,9 +196,10 @@ class DetailPage extends StatelessWidget {
                   const SizedBox(height: 10),
                   _buildContactOption(context),
                   const SizedBox(height: 20),
-                  _buildInfoSection('Subtitle', seeker.secondname ?? ''),
-                  _buildInfoSection('Description', seeker.description ?? ''),
-                  _buildInfoSection('Category', seeker.category ?? ''),
+                  _buildInfoSection('Subtitle', widget.seeker.secondname ?? ''),
+                  _buildInfoSection(
+                      'Description', widget.seeker.description ?? ''),
+                  _buildInfoSection('Category', widget.seeker.category ?? ''),
                   const SizedBox(height: 20),
                   const Text(
                     'Uploaded Document:',
@@ -234,161 +208,128 @@ class DetailPage extends StatelessWidget {
                   const SizedBox(height: 10),
                   _buildPdfSection(context),
                   const SizedBox(height: 20),
+                  if (_isCurrentUser())
+                    ElevatedButton.icon(
+                      onPressed: () => _uploadImage(context),
+                      icon: const Icon(Icons.add_photo_alternate),
+                      label: const Text('Upload New Image'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                      ),
+                    ),
                 ],
               ),
             ),
           ],
         ),
       ),
+      floatingActionButton: Consumer<SeekerProvider>(
+        builder: (context, value, child) => FloatingActionButton(
+          onPressed: () => seekerProvider.imageAdderSeeker(context),
+          child: const Icon(Icons.add_photo_alternate),
+          backgroundColor: Colors.red,
+        ),
+      ),
     );
   }
 
   ImageProvider _getImageProvider() {
-    if ((seeker.image ?? '').startsWith('http') ||
-        (seeker.image ?? '').startsWith('https')) {
-      return NetworkImage(seeker.image!);
-    } else if (seeker.image != null && seeker.image!.isNotEmpty) {
-      return FileImage(File(seeker.image!));
+    if ((widget.seeker.image ?? '').startsWith('http') ||
+        (widget.seeker.image ?? '').startsWith('https')) {
+      return NetworkImage(widget.seeker.image!);
+    } else if (widget.seeker.image != null && widget.seeker.image!.isNotEmpty) {
+      return FileImage(File(widget.seeker.image!));
     } else {
-      return const AssetImage('assets/default_profile.png');
+      return const AssetImage('assets/default_profile.jpg');
     }
   }
 
-  Widget? _getImageErrorWidget() {
-    if (seeker.image == null || seeker.image!.isEmpty) {
-      return const Icon(Icons.person, size: 70, color: Colors.black);
-    }
-    return null;
+  Widget _getImageErrorWidget() {
+    return Container(
+      color: Colors.transparent,
+      alignment: Alignment.center,
+      child: const Text(
+        'Error loading image',
+        style: TextStyle(color: Colors.red),
+      ),
+    );
   }
 
-  Widget _buildInfoSection(String title, String content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildContactOption(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        Text(
-          '$title:',
-          style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700]),
+        IconButton(
+          onPressed: () => _makePhoneCall('tel:${widget.seeker.number}'),
+          icon: const Icon(Icons.call, color: Colors.green, size: 40),
         ),
-        const SizedBox(height: 5),
-        Text(
-          content,
-          style: const TextStyle(fontSize: 16, color: Colors.black87),
+        IconButton(
+          onPressed: () => _openWhatsApp(widget.seeker.number ?? ''),
+          icon: const Icon(Icons.message, color: Colors.green, size: 40),
         ),
-        const SizedBox(height: 15),
+        IconButton(
+          onPressed: () {
+            final Uri emailLaunchUri = Uri(
+              scheme: 'mailto',
+              path: widget.seeker.email ?? '',
+            );
+            launch(emailLaunchUri.toString());
+          },
+          icon: const Icon(Icons.email, color: Colors.green, size: 40),
+        ),
       ],
     );
   }
 
-  Widget _buildPdfSection(BuildContext context) {
-    return Container(
-      height: 150,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.blue[100]!, Colors.blue[200]!],
-        ),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
+  Widget _buildInfoSection(String title, String content) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            content,
+            style: const TextStyle(fontSize: 18),
           ),
         ],
       ),
-      child: (seeker.pdf ?? '').isNotEmpty
-          ? Center(
-              child: ElevatedButton.icon(
+    );
+  }
+
+  Widget _buildPdfSection(BuildContext context) {
+    return Column(
+      children: [
+        if (widget.seeker.pdf != null && widget.seeker.pdf!.isNotEmpty)
+          Column(
+            children: [
+              ElevatedButton.icon(
                 onPressed: () => _openPdfPopup(context),
-                icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                label: const Text('View PDF',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                icon: const Icon(Icons.picture_as_pdf),
+                label: const Text('View PDF'),
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.blue[700],
-                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30)),
                 ),
               ),
-            )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.picture_as_pdf, size: 60, color: Colors.blue[700]),
-                const SizedBox(height: 10),
-                Text(
-                  'No PDF Available',
-                  style: TextStyle(
-                      color: Colors.blue[700], fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-    );
-  }
-
-  Widget _buildContactOption(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            const Icon(Icons.phone, color: Colors.green),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () => _makePhoneCall('tel:${seeker.number ?? ''}'),
-              child: Text(
-                seeker.number ?? 'No phone number',
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            const Icon(Icons.email, color: Colors.red),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () => launch('mailto:${seeker.email ?? ''}'),
-              child: Text(
-                seeker.email ?? 'No email',
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: <Widget>[
-            Icon(Icons.message, color: Colors.green),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () => _openWhatsApp(seeker.number ?? ''),
-              child: const Text(
-                'WhatsApp',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue),
-              ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 10),
+            ],
+          )
+        else
+          const Text(
+            'No document uploaded',
+            style: TextStyle(fontSize: 18),
+          ),
       ],
     );
   }

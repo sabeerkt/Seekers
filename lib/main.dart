@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:seeker/controller/auth_provider.dart';
 import 'package:seeker/controller/base_provider.dart';
+import 'package:seeker/controller/connction.dart';
 import 'package:seeker/controller/seeker_provider.dart';
 import 'package:seeker/firebase_options.dart';
 import 'package:seeker/screens/splash.dart';
@@ -23,10 +24,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => AuthProviders(),
         ),
-         ChangeNotifierProvider(
+        ChangeNotifierProvider(
+          create: (context) => InternetConnectivityProvider(),
+        ),
+        ChangeNotifierProvider(
           create: (context) => BaseProvider(),
         ),
-         ChangeNotifierProvider(
+        ChangeNotifierProvider(
           create: (context) => SeekerProvider(),
         ),
       ],

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:seeker/model/seeker_model.dart';
 import 'package:seeker/service/firebase_service.dart';
 
@@ -26,6 +27,15 @@ class SeekerProvider extends ChangeNotifier {
           .where('name', isLessThan: _searchQuery + 'z')
           .snapshots();
     }
+  }
+
+  Stream<List<SeekerModel>> get favoritesStream {
+    return _firebaseService.favoritesRef.snapshots().map((snapshot) {
+      return snapshot.docs
+          .map(
+              (doc) => SeekerModel.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    });
   }
 
   Stream<QuerySnapshot<SeekerModel>> getFilteredData(String category) {
@@ -88,28 +98,41 @@ class SeekerProvider extends ChangeNotifier {
     await _firebaseService.seekerref.doc(id).update(seeker.toJson());
     notifyListeners();
   }
-Future<void> imageAdder(dynamic image) async {
-  Reference folder = _firebaseService.storage.ref().child('images');
-  Reference images = folder.child("$uniquename.jpg");
 
-  try {
-    if (image is File) {
-      // Upload from File
-      await images.putFile(image);
-    } else if (image is Uint8List) {
-      // Upload from Uint8List
-      await images.putData(image);
-    } else {
-      throw Exception('Invalid image type');
+  Future<void> imageAdder(dynamic image) async {
+    Reference folder = _firebaseService.storage.ref().child('images');
+    Reference images = folder.child("$uniquename.jpg");
+
+    try {
+      if (image is File) {
+        // Upload from File
+        await images.putFile(image);
+      } else if (image is Uint8List) {
+        // Upload from Uint8List
+        await images.putData(image);
+      } else {
+        throw Exception('Invalid image type');
+      }
+
+      downloadurl = await images.getDownloadURL();
+      notifyListeners();
+      print(downloadurl);
+    } catch (e) {
+      throw Exception(e);
     }
-
-    downloadurl = await images.getDownloadURL();
-    notifyListeners();
-    print(downloadurl);
-  } catch (e) {
-    throw Exception(e);
   }
-}
+
+  
+  Future<void> imageAdderSeeker(BuildContext context) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      File imageFile = File(pickedFile.path);
+      await imageAdder(imageFile);
+      notifyListeners();
+    }
+  }
 
   pdfAdder(pdfFile) async {
     Reference folder = _firebaseService.storage.ref().child('pdfs');
